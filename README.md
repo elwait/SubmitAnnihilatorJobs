@@ -12,8 +12,10 @@ The script will:
 - create my_jobs.txt from AMOEBAAnnihilator jobfile (reformatting)
 - each line is a job                                              
 - for each job, the script will check for avail nodes             
-- if it finds 1, will ssh to node and submit job w correct tinker 
-- job pid will be stored                                          
-- if it does not find avail node, it will check status of pids    
-- when pid no longer running, it will search for node and submit  
-- then proceed to the next line                                   
+- if it finds a node, will ssh to node and submit job with correct tinker for CUDA version
+- job pid will be stored
+- it will print the status of all job pids
+- if it does not find avail node, it will alternate between sleeping and checking until it finds one
+- job will be submitted and pid will be stored
+- it will print the status of all job pids
+- then proceed to the next line
