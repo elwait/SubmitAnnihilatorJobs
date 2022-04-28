@@ -2,21 +2,21 @@
 
 # DESCRIPTION
 #####################################################################
-# This script is for automated submission of tinker jobs.           #
+# This script is for automated submission of tinker dynamic jobs.   #
 # It is intended to work with AMOEBAAnnihilator.                    #
 # If using as intended, user needs to set:                          #
 # - AMOEBAAnnihilator job file                                      #
-# - name of job file to be created (my_jobs.txt)                    #
 # - list of nodes that can be used                                  #
 # The script will:                                                  #
-# - create my_jobs.txt from AMOEBAAnnihilator jobfile (reformatting)#
-# - each line is a job                                              #
-# - for each job, the script will check for avail nodes             #
+# - create my_jobs.txt from poltype jobfile (reformatting)          #
+# - each line in my_jobs.txt is a job                               #
+# - for each job,  script will check for available node             #
 # - if it finds 1, will ssh to node and submit job w correct tinker #
 # - job pid will be stored                                          #
-# - if it does not find avail node, it will check status of pids    #
-# - when pid no longer running, it will search for node and submit  #
-# - then proceed to the next line                                   #
+# - if it does not find avail node, sleep 30 min and check again    #
+# - it will also check status of pids                               #
+# - when pid no longer running,    will be removed from list        #
+# - after a job is submitted,    will proceed to the next line      #
 #####################################################################
 
 # FUNCTIONS
@@ -26,7 +26,7 @@
 # How to run: FindNode "${node_list[@]}"
 # Example output if found a node:
 #    FALSE
-#    bme-black #/home/liuchw/Softwares/tinkers/Tinker9-latest/build_cuda11.2/tinker9
+#    bme-black /home/liuchw/Softwares/tinkers/Tinker9-latest/build_cuda11.2/tinker9
 # Example output if no node free:
 #    TRUE
 function FindNode {
@@ -51,7 +51,6 @@ function FindNode {
         no_jobs="$(echo $no_jobs_full | awk '{$1=$NF=""; print $0}')"    # use awk to trim line
         if [[ "$cuda_version" == "10.2" ]]; then
             #echo "$node is an older gpu"
-            local gpu="old"                     # I don't print this anywhere currently, just have it in case I do later
             # if no other jobs, submit to this older gpu node
             if [[ "$no_jobs" == "No running processes found" ]]; then
                 tinker=$tinkergpu
@@ -73,11 +72,9 @@ function FindNode {
                     #echo "checking next node"
                     nowhere_to_run="FALSE"
                 fi
-                #break
             fi
         elif [[ "$cuda_version" == @(11.2|11.4) ]]; then
             #echo "$node is a fancy gpu"
-            local gpu="fancy"                   # I don't print this anywhere currently, just have it in case I do later
             # if no other jobs, submit to this newer gpu node
             if [[ "$no_jobs" == "No running processes found" ]]; then
                 tinker=$fancy_tinkergpu
@@ -110,7 +107,6 @@ function FindNode {
                     #echo "checking next node"
                     nowhere_to_run="FALSE"
                 fi
-                #break
             fi
         #else
             #echo "no cuda possibly"
@@ -143,9 +139,7 @@ function PidStatus {
 # SET NODES
 declare -a node_list=("node36" "node206" "bme-pluto" "bme-mars" "bme-venus")
 #declare -a node_list=("bme-venus")                 # for testing with just 1 node
-
 declare -a pids=()                                  # empty array for storing job pids
-#bashrc="~/.allpurpose.bashrc"                      # if set here, use variable later
 
 
 # CREATE FORMATTED JOB TEXT FILE
@@ -163,7 +157,6 @@ line_counter=0
 while IFS= read -r line; do                         # for each line in my_jobs.txt
     echo "Starting on a new job."
     #echo "$line"                                   # print line
-    line_counter=$((line_counter + 1))
     # getting info about job from its line in my_jobs.txt
     dir=$(echo $line | awk '{ print $2}')           # get directory from job txt file, user can also set themselves
     #echo "dir is $dir"
@@ -187,12 +180,11 @@ while IFS= read -r line; do                         # for each line in my_jobs.t
         tinker=$(echo $node_tinker | awk '{ print $2}') # 2nd field of node_tinker is correct tinker for node cuda version
         echo "Submitting job to $node"
         cmd_str="$tinker_cmd $dir/$xyz -k $dir/$key $nums > $dir/$out_file"
-        echo "ssh -n $node cd $dir ; nohup $tinker $cmd_str &" #source ~/.allpurpose.bashrc
-        $(ssh -n $node "cd $dir ; nohup $tinker $cmd_str &") & #source ~/.allpurpose.bashrc
-        pids+=( "$!" )
-        echo "${pids[@]}"
-        sleep 120 #5
-        #continue #break #continue
+        echo "ssh -n $node cd $dir ; nohup $tinker $cmd_str &"   # print job info
+        $(ssh -n $node "cd $dir ; nohup $tinker $cmd_str &") &   # submit job
+        pids+=( "$!" )                                           # add pid of most recent job to array
+        echo "${pids[@]}"                                        # print array of pids
+        sleep 120                                                # sleep 2 min - avoids some race conditions
     elif [[ "$nowhere_to_run" == "TRUE" ]]; then
         echo "No node free right now - going to keep checking..."
         sleep 15
@@ -200,55 +192,36 @@ while IFS= read -r line; do                         # for each line in my_jobs.t
             #echo "Nowhere to run = $nowhere_to_run"
             nowhere_to_run=$(FindNode "${node_list[@]}" | head -n 1)     # run FindNode and see if nowhere_to_run (1st line of output)
             echo "Nowhere to run = $nowhere_to_run"
-	    for pid in "${pids[@]}"; do
-                pid_running=$(PidStatus "$pid")
+	    for pid in "${pids[@]}"; do             # loop through array of pids
+                pid_running=$(PidStatus "$pid")     # check status of pid
 		echo "$pid status $pid_running"
 	    done
-	    sleep 1800                              # sleep 30 min before continuing to loop
+	    sleep 1800                              # sleep 30 min before checking again
         done
-	for pid in "${pids[@]}"; do
-	    pid_running=$(PidStatus "$pid")
-            echo "Checking to see if any pids have finished..."
+	echo "Checking to see if any pids have finished..."
+	for pid in "${pids[@]}"; do                 # loop through array of pids
+	    pid_running=$(PidStatus "$pid")         # check status of pid
 	    echo "$pid status $pid_running"
-	    if [[ "$pid_running" == "0" ]]; then
-                #echo "$pid stopped"
+	    if [[ "$pid_running" == "0" ]]; then    # if pid is not running
 		echo "Removing $pid from list."
-		#echo "original array ${pids[@]}"
-		pids=( ${pids[@]/$pid} )                # remove $pid from array
-		echo "List of pids is now: ${pids[@]}"
-		sleep 5
+		pids=( ${pids[@]/$pid} )            # remove $pid from array
+		sleep 5                             # safety
 	    fi
         done
-        echo "Nowhere to run = $nowhere_to_run"
+	echo "List of pids is now: ${pids[@]}"      # print new pid list
         echo "Trying to submit next job..."
-        node_tinker=$(FindNode "${node_list[@]}" | awk 'NR==2')
+        node_tinker=$(FindNode "${node_list[@]}" | awk 'NR==2')          # look for available node, choose correct tinker
         node=$(echo $node_tinker | awk '{ print $1}')
         tinker=$(echo $node_tinker | awk '{ print $2}')
         echo "Submitting job to $node"
         cmd_str="$tinker_cmd $dir/$xyz -k $dir/$key $nums > $dir/$out_file"
-        echo "ssh -n $node cd $dir ; nohup $tinker $cmd_str &" #source ~/.allpurpose.bashrc
-        $(ssh -n $node "cd $dir ; nohup $tinker $cmd_str &") & #source ~/.allpurpose.bashrc
-        pids+=( "$!" )
-        echo "${pids[@]}"
-    #else
-    #    echo "I have no idea what happened"
+        echo "ssh -n $node cd $dir ; nohup $tinker $cmd_str &"   # print job info
+        $(ssh -n $node "cd $dir ; nohup $tinker $cmd_str &") &   # submit job
+        pids+=( "$!" )                               # add pid of most recent job to array
+        echo "${pids[@]}"                            # print array of pids
     fi
-    #echo "done looking for a place to submit"
-    #echo "checkings pids"
-    #for pid in "${pids[@]}"; do
-    #    pid_running=$(PidStatus "$pid")
-    #    echo "$pid status $pid_running"
-    #    if [[ "$pid_running" == "0" ]]; then
-    #        echo "$pid stopped"
-    #        echo "remove $pid from array"
-    #        #echo "original array ${pids[@]}"
-    #        pids=( ${pids[@]/$pid} )                # remove $pid from array
-    #        echo "current pids ${pids[@]}"
-    #        sleep 5
-    #    fi
-    #done
     line_counter=$((line_counter + 1))
-    progress_perc=$(( 100*line_counter/num_jobs ))
+    progress_perc=$(( 100* line_counter/num_jobs ))
     echo "${progress_perc} % of jobs have been submitted!"
 done < ${my_jobfile}
 
