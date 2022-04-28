@@ -190,25 +190,26 @@ while IFS= read -r line; do                         # for each line in my_jobs.t
         sleep 15
         while [[ "$nowhere_to_run" == "TRUE" ]]; do
             #echo "Nowhere to run = $nowhere_to_run"
-            nowhere_to_run=$(FindNode "${node_list[@]}" | head -n 1) # run FindNode and get nowhere_to_run - 1st line
+	    # run FindNode and get nowhere_to_run - 1st line of output, should exit loop if FALSE
+            nowhere_to_run=$(FindNode "${node_list[@]}" | head -n 1)
             echo "Nowhere to run = $nowhere_to_run"
 	    for pid in "${pids[@]}"; do                 # loop through array of pids
-                pid_running=$(PidStatus "$pid")     # check status of pid
+                pid_running=$(PidStatus "$pid")         # check status of pid
 		echo "$pid status $pid_running"
 	    done
 	    sleep 1800                                  # sleep 30 min before checking again
         done
 	echo "Checking to see if any pids have finished..."
-	for pid in "${pids[@]}"; do                     # loop through array of pids
-	    pid_running=$(PidStatus "$pid")             # check status of pid
+	for pid in "${pids[@]}"; do                              # loop through array of pids
+	    pid_running=$(PidStatus "$pid")                      # check status of pid
 	    echo "$pid status $pid_running"
-	    if [[ "$pid_running" == "0" ]]; then        # if pid is not running
+	    if [[ "$pid_running" == "0" ]]; then                 # if pid is not running
 		echo "Removing $pid from list."
-		pids=( ${pids[@]/$pid} )                    # remove $pid from array
-		sleep 5                                     # safety
+		pids=( ${pids[@]/$pid} )                         # remove $pid from array
+		sleep 5                                          # safety
 	    fi
         done
-	echo "List of pids is now: ${pids[@]}"          # print new pid list
+	echo "List of pids is now: ${pids[@]}"                   # print new pid list
         echo "Trying to submit next job..."
         node_tinker=$(FindNode "${node_list[@]}" | awk 'NR==2')  # look for available node, choose correct tinker
         node=$(echo $node_tinker | awk '{ print $1}')
