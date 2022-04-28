@@ -20,3 +20,9 @@ The script will:
   - it will print the status of all job pids
   - if a pid is finished, it will be removed from the list
   - it will alternative between sleeping and checking for an available node until it finds one
+
+
+You will not need to source anything. Simply do:
+nohup bash .sh > jobs.out & disown
+or if you make executable
+nohup .sh > jobs.out & disown
