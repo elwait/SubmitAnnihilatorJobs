@@ -1,21 +1,22 @@
-This script is for automated submission of tinker jobs.
+This script is for automated submission of tinker dynamic jobs.
 It is intended to work with AMOEBAAnnihilator.
 
 
 If using as intended, user needs to set:                          
-- AMOEBAAnnihilator job file                                      
-- name of job file to be created (my_jobs.txt)                    
+- name of AMOEBAAnnihilator job file                                                         
 - list of nodes that can be used
 
                         
 The script will:                                                  
-- create my_jobs.txt from AMOEBAAnnihilator jobfile (reformatting)
+- create my_jobs.txt from AMOEBAAnnihilator jobfile
 - each line is a job                                              
-- for each job, the script will check for avail nodes             
-- if it finds a node, will ssh to node and submit job with correct tinker for CUDA version
-- job pid will be stored
-- it will print the status of all job pids
-- if it does not find avail node, it will alternate between sleeping and checking until it finds one
-- job will be submitted and pid will be stored
-- it will print the status of all job pids
-- then proceed to the next line
+- for each job, the script will check for an available node
+- if it finds an available node:
+  -  it will decide which tinker to use (based on CUDA version)
+  - it will then submit the job to that node via ssh
+  - job pid will be stored
+  - it will proceed to the next job line
+- if there is no node available:
+  - it will print the status of all job pids
+  - if a pid is finished, it will be removed from the list
+  - it will alternative between sleeping and checking for an available node until it finds one
