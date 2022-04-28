@@ -30,14 +30,14 @@
 # Example output if no node free:
 #    TRUE
 function FindNode {
-    local node_list=("$@")                          # Rebuild the array of nodes passed in
+    local node_list=("$@")                  # Rebuild the array of nodes passed in
     #echo "${node_list[@]}"
-    last_node="${node_list[@]:(-1)}"                # find last node in list
+    last_node="${node_list[@]:(-1)}"        # find last node in list
     #echo "the last node is $last_node"
     fancy_tinkergpu="/home/liuchw/Softwares/tinkers/Tinker9-latest/build_cuda11.2/tinker9"
     tinkergpu="/home/liuchw/Softwares/tinkers/Tinker9-latest/build_cuda10.2/tinker9"
-    for ((i = 0 ; i<${#node_list[@]} ; i++)); do    # for each node in list
-        node="${node_list[$i]}"                     # set $node to ith place in list
+    for ((i = 0 ; i<${#node_list[@]} ; i++)); do                         # for each node in list
+        node="${node_list[$i]}"             # set $node to ith place in list
         #echo "Trying $node"
         #echo "i is $i"
         # ssh to node, run nvidia-smi to get info, look for line with cuda version, trim to only that
@@ -45,7 +45,7 @@ function FindNode {
         #echo $cuda_version
         # ssh to node, run nvidia-smi, get lines mentioning tinker9, count them for num tinker jobs running
         jobs_running=$(ssh -n $node 'nvidia-smi | grep "tinker9" | awk "/tinker9/{count++} END{print count}"')
-        #echo "there are $jobs_running jobs running"    # $jobs_running will be blank if no jobs on node
+        #echo "there are $jobs_running jobs running"    # $jobs_running blank if no jobs on node
         # ssh to node, run nvidia-smi, see if there are any lines saying no running processes found
         no_jobs_full=$(ssh -n $node 'nvidia-smi | grep "No running processes found"')
         no_jobs="$(echo $no_jobs_full | awk '{$1=$NF=""; print $0}')"    # use awk to trim line
@@ -57,8 +57,8 @@ function FindNode {
                 local node_free="TRUE"
                 nowhere_to_run="FALSE"
                 #echo "$node is free"
-                echo "$nowhere_to_run"      # function output 1st line
-                echo "$node $tinker"        # function output 2nd line - node that we will use + correct tinker
+                echo "$nowhere_to_run"      # function output line 1
+                echo "$node $tinker"        # function output line 2
                 return                      # can exit loop going over nodes bc found node
             else
                 #echo "$node is not free."
@@ -82,18 +82,18 @@ function FindNode {
                 local node_free="TRUE"
                 #echo "$node is free"
                 nowhere_to_run="FALSE"
-                echo "$nowhere_to_run"        # function output 1st line
-                echo "$node $tinker"          # function output 2nd line - node that we will use + correct tinker
-                return                        # can exit loop going over nodes bc found node
+                echo "$nowhere_to_run"      # function output 1st line
+                echo "$node $tinker"        # function output 2nd line
+                return                      # can exit loop going over nodes bc found node
             # if only 1 other job, submit another to this newer gpu node
             elif [[ "$jobs_running" != @(2|3|4) ]]; then
-                #echo "there are $jobs_running jobs running"     # $jobs_running will be blank if no jobs on node
+                #echo "there are $jobs_running jobs running"            # blank if no jobs on node
                 tinker=$fancy_tinkergpu
                 #echo 'breaking out of newer gpu not 2 3 or 4 tinker jobs'
                 nowhere_to_run="FALSE"
-                echo "$nowhere_to_run"        # function output 1st line
-                echo "$node $tinker"          # function output 2nd line - node that we will use + correct tinker
-                return                        # can exit loop going over nodes bc found node
+                echo "$nowhere_to_run"      # function output line 1
+                echo "$node $tinker"        # function output line 2 - node + correct tinker
+                return                      # can exit loop going over nodes bc found node
             else
                 #echo "$node is not free."
                 local node_free="FALSE"
@@ -101,8 +101,8 @@ function FindNode {
                 if [[ "$node" == "$last_node" ]]; then
                     #echo "last node in list not free"
                     nowhere_to_run="TRUE"
-                    echo "$nowhere_to_run"    # function output 1st line
-                    return                    # exit loop going over nodes bc none free now
+                    echo "$nowhere_to_run"  # function output 1st line
+                    return                  # exit loop going over nodes bc none free now
                 else
                     #echo "checking next node"
                     nowhere_to_run="FALSE"
