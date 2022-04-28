@@ -1,9 +1,9 @@
-This script is for automated submission of tinker dynamic jobs.
-It is intended to work with AMOEBAAnnihilator.
+This script is for automated submission of Tinker dynamic jobs.
+It is intended to work with Poltype's AMOEBAAnnihilator.
 
 
 If using as intended, user needs to set:                          
-- name of AMOEBAAnnihilator job file                                                         
+- name of poltype job file                                                     
 - list of nodes that can be used
 
                         
