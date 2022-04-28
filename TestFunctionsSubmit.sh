@@ -57,17 +57,17 @@ function FindNode {
                 local node_free="TRUE"
                 nowhere_to_run="FALSE"
                 #echo "$node is free"
-                echo "$nowhere_to_run"              # function output 1st line
-                echo "$node $tinker"                # function output 2nd line - node that we will use + correct tinker
-                return                              # can exit loop going over nodes bc found node
+                echo "$nowhere_to_run"      # function output 1st line
+                echo "$node $tinker"        # function output 2nd line - node that we will use + correct tinker
+                return                      # can exit loop going over nodes bc found node
             else
                 #echo "$node is not free."
                 local node_free="FALSE"
                 if [[ "$node" == "$last_node" ]]; then
                     #echo "last node in list not free"
                     nowhere_to_run="TRUE"
-                    echo "$nowhere_to_run"          # function output 1st line
-                    return                          # exit loop going over nodes bc none free now
+                    echo "$nowhere_to_run"  # function output 1st line
+                    return                  # exit loop going over nodes bc none free now
                 else
                     #echo "checking next node"
                     nowhere_to_run="FALSE"
@@ -82,18 +82,18 @@ function FindNode {
                 local node_free="TRUE"
                 #echo "$node is free"
                 nowhere_to_run="FALSE"
-                echo "$nowhere_to_run"              # function output 1st line
-                echo "$node $tinker"                # function output 2nd line - node that we will use + correct tinker
-                return                              # can exit loop going over nodes bc found node
+                echo "$nowhere_to_run"        # function output 1st line
+                echo "$node $tinker"          # function output 2nd line - node that we will use + correct tinker
+                return                        # can exit loop going over nodes bc found node
             # if only 1 other job, submit another to this newer gpu node
             elif [[ "$jobs_running" != @(2|3|4) ]]; then
                 #echo "there are $jobs_running jobs running"     # $jobs_running will be blank if no jobs on node
                 tinker=$fancy_tinkergpu
                 #echo 'breaking out of newer gpu not 2 3 or 4 tinker jobs'
                 nowhere_to_run="FALSE"
-                echo "$nowhere_to_run"              # function output 1st line
-                echo "$node $tinker"                # function output 2nd line - node that we will use + correct tinker
-                return                              # can exit loop going over nodes bc found node
+                echo "$nowhere_to_run"        # function output 1st line
+                echo "$node $tinker"          # function output 2nd line - node that we will use + correct tinker
+                return                        # can exit loop going over nodes bc found node
             else
                 #echo "$node is not free."
                 local node_free="FALSE"
@@ -101,8 +101,8 @@ function FindNode {
                 if [[ "$node" == "$last_node" ]]; then
                     #echo "last node in list not free"
                     nowhere_to_run="TRUE"
-                    echo "$nowhere_to_run"          # function output 1st line
-                    return                          # exit loop going over nodes bc none free now
+                    echo "$nowhere_to_run"    # function output 1st line
+                    return                    # exit loop going over nodes bc none free now
                 else
                     #echo "checking next node"
                     nowhere_to_run="FALSE"
@@ -157,27 +157,27 @@ line_counter=0
 while IFS= read -r line; do                         # for each line in my_jobs.txt
     echo "Starting on a new job."
     #echo "$line"                                   # print line
-    # getting info about job from its line in my_jobs.txt
-    dir=$(echo $line | awk '{ print $2}')           # get directory from job txt file, user can also set themselves
+    # get info about job from its line in my_jobs.txt
+    dir=$(echo $line | awk '{ print $2}')           # get directory from job txt file
     #echo "dir is $dir"
-    xyz=$(echo $line | grep -o "\S*xyz")            # get xyz, user can also set themselves
+    xyz=$(echo $line | grep -o "\S*xyz")            # get xyz
     #echo "xyz is $xyz"
-    key=$(echo $line | grep -o "\S*key")            # get key, user can also set themselves
+    key=$(echo $line | grep -o "\S*key")            # get key
     #echo "key is $key"
-    out_file=$(echo $line | grep -o "\S*out" )      # get out, user can also set themselves
+    out_file=$(echo $line | grep -o "\S*out" )      # get out
     #echo "out file is $out_file"
     nums=$(echo $line | sed 's/.*key\(.*\)>.*/\1/') # steps tstep dump ensmbl temp pres
     tinker_cmd="dynamic"                            # set desired tinker command: ex "dynamic" or "bar 1"
     # check to see if a node is free
     echo "Finding a node to run job on..."
-    nowhere_to_run=$(FindNode "${node_list[@]}" | head -n 1)     # run FindNode and see if nowhere_to_run (1st line of output)
+    nowhere_to_run=$(FindNode "${node_list[@]}" | head -n 1)     # run FindNode and get nowhere_to_run - 1st line out
     echo "Nowhere to run = $nowhere_to_run"
     # should get out $nowhere_to_run \n $node $tinker
-    if [[ "$nowhere_to_run" == "FALSE" ]]; then     # there is a node available
-        node_tinker=$(FindNode "${node_list[@]}" | awk 'NR==2')  # run FindNode and save avail node+correct tinker - 2nd output line
+    if [[ "$nowhere_to_run" == "FALSE" ]]; then                  # there is a node available
+        node_tinker=$(FindNode "${node_list[@]}" | awk 'NR==2')  # run FindNode - get node+correct tinker - 2nd line out
         #echo $node_tinker
-        node=$(echo $node_tinker | awk '{ print $1}')   # 1st field of node_tinker is node that is available
-        tinker=$(echo $node_tinker | awk '{ print $2}') # 2nd field of node_tinker is correct tinker for node cuda version
+        node=$(echo $node_tinker | awk '{ print $1}')            # 1st field of node_tinker is node
+        tinker=$(echo $node_tinker | awk '{ print $2}')          # 2nd field is correct tinker for node cuda version
         echo "Submitting job to $node"
         cmd_str="$tinker_cmd $dir/$xyz -k $dir/$key $nums > $dir/$out_file"
         echo "ssh -n $node cd $dir ; nohup $tinker $cmd_str &"   # print job info
@@ -190,35 +190,36 @@ while IFS= read -r line; do                         # for each line in my_jobs.t
         sleep 15
         while [[ "$nowhere_to_run" == "TRUE" ]]; do
             #echo "Nowhere to run = $nowhere_to_run"
-            nowhere_to_run=$(FindNode "${node_list[@]}" | head -n 1)     # run FindNode and see if nowhere_to_run (1st line of output)
+            nowhere_to_run=$(FindNode "${node_list[@]}" | head -n 1) # run FindNode and get nowhere_to_run - 1st line
             echo "Nowhere to run = $nowhere_to_run"
-	    for pid in "${pids[@]}"; do             # loop through array of pids
+	    for pid in "${pids[@]}"; do                 # loop through array of pids
                 pid_running=$(PidStatus "$pid")     # check status of pid
 		echo "$pid status $pid_running"
 	    done
-	    sleep 1800                              # sleep 30 min before checking again
+	    sleep 1800                                  # sleep 30 min before checking again
         done
 	echo "Checking to see if any pids have finished..."
-	for pid in "${pids[@]}"; do                 # loop through array of pids
-	    pid_running=$(PidStatus "$pid")         # check status of pid
+	for pid in "${pids[@]}"; do                     # loop through array of pids
+	    pid_running=$(PidStatus "$pid")             # check status of pid
 	    echo "$pid status $pid_running"
-	    if [[ "$pid_running" == "0" ]]; then    # if pid is not running
+	    if [[ "$pid_running" == "0" ]]; then        # if pid is not running
 		echo "Removing $pid from list."
-		pids=( ${pids[@]/$pid} )            # remove $pid from array
-		sleep 5                             # safety
+		pids=( ${pids[@]/$pid} )                    # remove $pid from array
+		sleep 5                                     # safety
 	    fi
         done
-	echo "List of pids is now: ${pids[@]}"      # print new pid list
+	echo "List of pids is now: ${pids[@]}"          # print new pid list
         echo "Trying to submit next job..."
-        node_tinker=$(FindNode "${node_list[@]}" | awk 'NR==2')          # look for available node, choose correct tinker
+        node_tinker=$(FindNode "${node_list[@]}" | awk 'NR==2')  # look for available node, choose correct tinker
         node=$(echo $node_tinker | awk '{ print $1}')
         tinker=$(echo $node_tinker | awk '{ print $2}')
         echo "Submitting job to $node"
         cmd_str="$tinker_cmd $dir/$xyz -k $dir/$key $nums > $dir/$out_file"
         echo "ssh -n $node cd $dir ; nohup $tinker $cmd_str &"   # print job info
         $(ssh -n $node "cd $dir ; nohup $tinker $cmd_str &") &   # submit job
-        pids+=( "$!" )                               # add pid of most recent job to array
-        echo "${pids[@]}"                            # print array of pids
+        pids+=( "$!" )                              # add pid of most recent job to array
+        echo "${pids[@]}"                           # print array of pids
+        sleep 120                                   # sleep 2 min - avoids some race conditions
     fi
     line_counter=$((line_counter + 1))
     progress_perc=$(( 100* line_counter/num_jobs ))
