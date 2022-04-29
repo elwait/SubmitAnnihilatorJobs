@@ -143,7 +143,7 @@ declare -a pids=()                                               # empty array f
 
 
 # CREATE FORMATTED JOB TEXT FILE
-aa_jobfile=melk_04-25-22_barjobs.txt                    # annihilator job file you are reading from
+aa_jobfile=melk_04-25-22_barjobs.txt                              # annihilator job file you are reading from
 my_jobfile="bar_jobs.txt"                                         # file that I am writing job info to
 # take everything between "--job=" and "--numproc" in aa job file and write to my own job file
 sed 's/.*--job=\(.*\)--numproc.*/\1/' ${aa_jobfile} > ${my_jobfile}
@@ -157,9 +157,6 @@ line_counter=0
 while IFS= read -r line; do                                      # for each line in my_jobs.txt
     echo "Starting on a new bar job."
     #echo "$line"                                                # print line
-    # get info about job from its line in bar_jobs.txt
-    # just replace bar_gpu in the line with path_to_tinker9 bar
-
     # check to see if a node is free
     echo "Finding a node to run job on..."
     nowhere_to_run=$(FindNode "${node_list[@]}" | head -n 1)     # run FindNode and get nowhere_to_run - 1st line out
@@ -173,8 +170,8 @@ while IFS= read -r line; do                                      # for each line
         echo "Submitting job to $node"
         line_ed=$(echo $line | sed -i "s+bar_gpu+$tinker bar+g") # replace bar_gpu with full path and command
         cmd_str="nohup $line_ed & disown"
-        echo "ssh -n $node $cmd_str & disown"                    # print job info
-        $(ssh -n $node "$tinker $cmd_str") & disown              # submit job
+        echo "ssh -n $node $cmd_str &"                           # print job info
+        $(ssh -n $node "$cmd_str") &                             # submit job
         pids+=( "$!" )                                           # add pid of most recent job to array
         echo "${pids[@]}"                                        # print array of pids
         sleep 60                                                 # sleep 1 min - avoids some race conditions
@@ -210,8 +207,8 @@ while IFS= read -r line; do                                      # for each line
         echo "Submitting job to $node"
         line_ed=$(echo $line | sed -i "s+bar_gpu+$tinker bar+g") # replace bar_gpu with full path and command
         cmd_str="nohup $line_ed & disown"
-        echo "ssh -n $node $cmd_str & disown"                    # print job info
-        $(ssh -n $node "$tinker $cmd_str") & disown              # submit job
+        echo "ssh -n $node $cmd_str"                             # print job info
+        $(ssh -n $node "$cmd_str") &                             # submit job
         pids+=( "$!" )                                           # add pid of most recent job to array
         echo "${pids[@]}"                                        # print array of pids
         sleep 60                                                 # sleep 1 min - avoids some race conditions
