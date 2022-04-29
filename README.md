@@ -1,14 +1,14 @@
 # SubmitAnnihilatorJobs
 
 ## Purpose:
-This script is for automated submission of Tinker dynamic jobs. It is intended to work with Poltype's AMOEBAAnnihilator.
+These scripts are for automated submission of Tinker dynamic jobs. It is intended to work with Poltype's AMOEBAAnnihilator.
 
 ## Input:
-If using as intended, user needs to edit SubmitDynamicJobs.sh and set:
-name of poltype job file
-list of nodes that can be used
+If using as intended, user needs to edit the script and set:
+- name of poltype job file
+- list of nodes that can be used
 
-## How to use:
+## How to use SubmitDynamicJobs.sh:
 You will not need to source anything. After setting the necessary input, simply go to nova and do:
 
 > nohup bash SubmitDynamicJobs.sh > jobs.out & disown
@@ -17,9 +17,17 @@ or if you make the script executable executable:
 
 > nohup SubmitDynamicJobs.sh > jobs.out & disown
 
+## How to use SubmitBarJobs.sh:
+
+> nohup bash SubmitBarJobs.sh > jobs.out & disown
+
+or if you make the script executable executable:
+
+> nohup SubmitBarJobs.sh > jobs.out & disown
+
 ## The script will:
 
-- create my_jobs.txt from AMOEBAAnnihilator jobfile
+- create my_jobs.txt (for dynamic) or bar_jobs.txt (for bar) from poltype AMOEBAAnnihilator jobfile
 - each line is a job
 - for each job, the script will check for an available node
 - if it finds an available node:
