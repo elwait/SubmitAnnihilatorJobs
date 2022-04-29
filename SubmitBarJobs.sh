@@ -143,31 +143,23 @@ declare -a pids=()                                               # empty array f
 
 
 # CREATE FORMATTED JOB TEXT FILE
-aa_jobfile=melk_04-25-22_proddynamicsjobs.txt                    # annihilator job file you are reading from
-my_jobfile="my_jobs.txt"                                         # file that I am writing job info to
+aa_jobfile=melk_04-25-22_barjobs.txt                    # annihilator job file you are reading from
+my_jobfile="bar_jobs.txt"                                         # file that I am writing job info to
 # take everything between "--job=" and "--numproc" in aa job file and write to my own job file
 sed 's/.*--job=\(.*\)--numproc.*/\1/' ${aa_jobfile} > ${my_jobfile}
 # delete first line of new job file in case annihilator submitted it already
-#sed -i '1d' ${my_jobfile}
+sed -i '1d' ${my_jobfile}
 num_jobs=$(wc -l ${my_jobfile} | awk '{ print $1 }')
 echo "There are ${num_jobs} jobs to run."
 
 line_counter=0
 # BEGIN MAIN
 while IFS= read -r line; do                                      # for each line in my_jobs.txt
-    echo "Starting on a new job."
+    echo "Starting on a new bar job."
     #echo "$line"                                                # print line
-    # get info about job from its line in my_jobs.txt
-    dir=$(echo $line | awk '{ print $2}')                        # get directory from job txt file
-    #echo "dir is $dir"
-    xyz=$(echo $line | grep -o "\S*xyz")                         # get xyz
-    #echo "xyz is $xyz"
-    key=$(echo $line | grep -o "\S*key")                         # get key
-    #echo "key is $key"
-    out_file=$(echo $line | grep -o "\S*out" )                   # get out
-    #echo "out file is $out_file"
-    nums=$(echo $line | sed 's/.*key\(.*\)>.*/\1/')              # steps tstep dump ensmbl temp pres
-    tinker_cmd="dynamic"                                         # set desired tinker command: ex "dynamic" or "bar 1"
+    # get info about job from its line in bar_jobs.txt
+    # just replace bar_gpu in the line with path_to_tinker9 bar
+
     # check to see if a node is free
     echo "Finding a node to run job on..."
     nowhere_to_run=$(FindNode "${node_list[@]}" | head -n 1)     # run FindNode and get nowhere_to_run - 1st line out
@@ -179,12 +171,13 @@ while IFS= read -r line; do                                      # for each line
         node=$(echo $node_tinker | awk '{ print $1}')            # 1st field of node_tinker is node
         tinker=$(echo $node_tinker | awk '{ print $2}')          # 2nd field is correct tinker for node cuda version
         echo "Submitting job to $node"
-        cmd_str="$tinker_cmd $dir/$xyz -k $dir/$key $nums > $dir/$out_file"
-        echo "ssh -n $node cd $dir ; nohup $tinker $cmd_str &"   # print job info
-        $(ssh -n $node "cd $dir ; nohup $tinker $cmd_str &") &   # submit job
+        line_ed=$(echo $line | sed -i "s+bar_gpu+$tinker bar+g") # replace bar_gpu with full path and command
+        cmd_str="nohup $line_ed & disown"
+        echo "ssh -n $node $cmd_str & disown"                    # print job info
+        $(ssh -n $node "$tinker $cmd_str") & disown              # submit job
         pids+=( "$!" )                                           # add pid of most recent job to array
         echo "${pids[@]}"                                        # print array of pids
-        sleep 120                                                # sleep 2 min - avoids some race conditions
+        sleep 60                                                 # sleep 1 min - avoids some race conditions
     elif [[ "$nowhere_to_run" == "TRUE" ]]; then
         echo "No node free right now - going to keep checking..."
         sleep 15
@@ -197,7 +190,7 @@ while IFS= read -r line; do                                      # for each line
                 pid_running=$(PidStatus "$pid")                  # check status of pid
 		        echo "$pid status $pid_running"
 	        done
-	        sleep 1800                                           # sleep 30 min before checking again
+	        sleep 120                                            # sleep 2 min before checking again
         done
     	echo "Checking to see if any pids have finished..."
     	for pid in "${pids[@]}"; do                              # loop through array of pids
@@ -215,12 +208,13 @@ while IFS= read -r line; do                                      # for each line
         node=$(echo $node_tinker | awk '{ print $1}')
         tinker=$(echo $node_tinker | awk '{ print $2}')
         echo "Submitting job to $node"
-        cmd_str="$tinker_cmd $dir/$xyz -k $dir/$key $nums > $dir/$out_file"
-        echo "ssh -n $node cd $dir ; nohup $tinker $cmd_str &"   # print job info
-        $(ssh -n $node "cd $dir ; nohup $tinker $cmd_str &") &   # submit job
+        line_ed=$(echo $line | sed -i "s+bar_gpu+$tinker bar+g") # replace bar_gpu with full path and command
+        cmd_str="nohup $line_ed & disown"
+        echo "ssh -n $node $cmd_str & disown"                    # print job info
+        $(ssh -n $node "$tinker $cmd_str") & disown              # submit job
         pids+=( "$!" )                                           # add pid of most recent job to array
         echo "${pids[@]}"                                        # print array of pids
-        sleep 120                                                # sleep 2 min - avoids some race conditions
+        sleep 60                                                 # sleep 1 min - avoids some race conditions
     fi
     line_counter=$((line_counter + 1))
     progress_perc=$(( 100* line_counter/num_jobs ))
