@@ -2,14 +2,14 @@
 
 # DESCRIPTION
 #####################################################################
-# This script is for automated submission of tinker dynamic jobs.   #
-# It is intended to work with AMOEBAAnnihilator.                    #
+# This script is for automated submission of tinker bar jobs.       #
+# It is intended to work with poltype AMOEBAAnnihilator.            #
 # If using as intended, user needs to set:                          #
 # - AMOEBAAnnihilator job file                                      #
 # - list of nodes that can be used                                  #
 # The script will:                                                  #
-# - create my_jobs.txt from poltype jobfile (reformatting)          #
-# - each line in my_jobs.txt is a job                               #
+# - create bar_jobs.txt from poltype jobfile (reformatting)         #
+# - each line in bar_jobs.txt is a job                              #
 # - for each job,  script will check for available node             #
 # - if it finds 1, will ssh to node and submit job w correct tinker #
 # - job pid will be stored                                          #
