@@ -13,17 +13,9 @@ You will not need to source anything. After setting the necessary input, simply 
 
 > nohup bash SubmitDynamicJobs.sh > jobs.out & disown
 
-or if you make the script executable executable:
-
-> nohup SubmitDynamicJobs.sh > jobs.out & disown
-
 ## How to use SubmitBarJobs.sh:
 
 > nohup bash SubmitBarJobs.sh > jobs.out & disown
-
-or if you make the script executable executable:
-
-> nohup SubmitBarJobs.sh > jobs.out & disown
 
 ## The script will:
 
