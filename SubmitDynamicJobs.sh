@@ -52,7 +52,7 @@ function FindNode {
         if [[ "$cuda_version" == "10.2" ]]; then
             #echo "$node is an older gpu"
             # if no other jobs, submit to this older gpu node
-            if [[ "$no_jobs" == "No running processes found" ]]; then
+            if [[ "$no_jobs" == " No running processes found " ]]; then
                 tinker=$tinkergpu
                 local node_free="TRUE"
                 nowhere_to_run="FALSE"
