@@ -73,7 +73,7 @@ function FindNode {
                     nowhere_to_run="FALSE"
                 fi
             fi
-        elif [[ "$cuda_version" == @(11.2|11.4) ]]; then
+        elif [[ "$cuda_version" == @(11.2|11.4|11.6) ]]; then
             #echo "$node is a fancy gpu"
             # if no other jobs, submit to this newer gpu node
             if [[ "$no_jobs" == "No running processes found" ]]; then
@@ -86,10 +86,10 @@ function FindNode {
                 echo "$node $tinker"        # function output 2nd line
                 return                      # can exit loop going over nodes bc found node
             # if only 1 other job, submit another to this newer gpu node
-            elif [[ "$jobs_running" != @(2|3|4) ]]; then
+            elif [[ "$jobs_running" != @(1|2|3|4) ]]; then
                 #echo "there are $jobs_running jobs running"            # blank if no jobs on node
                 tinker=$fancy_tinkergpu
-                #echo 'breaking out of newer gpu not 2 3 or 4 tinker jobs'
+                #echo 'breaking out of newer gpu not 1 2 3 or 4 tinker jobs'
                 nowhere_to_run="FALSE"
                 echo "$nowhere_to_run"      # function output line 1
                 echo "$node $tinker"        # function output line 2 - node + correct tinker
@@ -137,8 +137,8 @@ function PidStatus {
 
 #####################################################################
 # SET NODES
-declare -a node_list=("node36" "node206" "bme-pluto" "bme-mars" "bme-venus")
-#declare -a node_list=("bme-venus")                              # for testing with just 1 node
+declare -a node_list=("node36" "node206" "node105" "bme-pluto" "bme-mars" "node91" "node92" "node93" "node95" "node96" "node97")
+#declare -a node_list=("node36")                                 # for testing with just 1 node
 declare -a pids=()                                               # empty array for storing job pids
 
 
