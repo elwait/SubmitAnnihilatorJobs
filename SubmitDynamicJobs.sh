@@ -137,7 +137,7 @@ function PidStatus {
 
 #####################################################################
 # SET NODES
-declare -a node_list=("node36" "node206" "bme-pluto" "bme-mars" "bme-venus")
+declare -a node_list=("node36" "node206" "node105" "bme-pluto" "bme-mars" "node91" "node92" "node93" "node95" "node96" "node97")
 #declare -a node_list=("bme-venus")                              # for testing with just 1 node
 declare -a pids=()                                               # empty array for storing job pids
 
@@ -148,7 +148,7 @@ my_jobfile="my_jobs.txt"                                         # file that I a
 # take everything between "--job=" and "--numproc" in aa job file and write to my own job file
 sed 's/.*--job=\(.*\)--numproc.*/\1/' ${aa_jobfile} > ${my_jobfile}
 # delete first line of new job file in case annihilator submitted it already
-#sed -i '1d' ${my_jobfile}
+sed -i '1d' ${my_jobfile}
 num_jobs=$(wc -l ${my_jobfile} | awk '{ print $1 }')
 echo "There are ${num_jobs} jobs to run."
 
